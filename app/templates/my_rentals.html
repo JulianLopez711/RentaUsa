@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Mis Películas Rentadas</h2>
+
+<div class="rentals-list">
+    {% if rentals %}
+        {% for rental in rentals %}
+        <div class="rental-item {% if rental.status == 'returned' %}returned{% endif %}">
+            <div class="rental-poster">
+                <img src="{{ rental.movie.poster }}" alt="{{ rental.movie.title }}">
+            </div>
+            
+            <div class="rental-info">
+                <h3>{{ rental.movie.title }}</h3>
+                <p>Rentada el: {{ rental.rent_date }}</p>
+                {% if rental.return_date %}
+                <p>Devuelta el: {{ rental.return_date }}</p>
+                {% endif %}
+                <p>Precio: ${{ rental.price }}</p>
+                <p class="rental-status">
+                    Estado: 
+                    <span class="status-{% if rental.status == 'active' %}active{% else %}returned{% endif %}">
+                        {% if rental.status == 'active' %}Activa{% else %}Devuelta{% endif %}
+                    </span>
+                </p>
+                
+                {% if rental.status == 'active' %}
+                <button class="btn-return" data-rental-id="{{ rental.id }}">Devolver Película</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="no-rentals">No tienes películas rentadas todavía.</p>
+        <a href="{{ url_for('home') }}" class="btn-primary">Explorar películas</a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Manejar devolución de películas
+    document.querySelectorAll('.btn-return').forEach(button => {
+        button.addEventListener('click', function() {
+            const rentalId = this.dataset.rentalId;
+            
+            fetch(`/return/${rentalId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Recargar la página para mostrar el cambio
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al procesar la solicitud');
+            });
+        });
+    });
+</script>
+{% endblock %}
