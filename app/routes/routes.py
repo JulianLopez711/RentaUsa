@@ -1,86 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
-import json
-from werkzeug.security import generate_password_hash, check_password_hash
-import os
-from datetime import datetime
-
-app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Cambia esto por una clave secreta segura
-
-# Base de datos simulada (en producción usarías una base de datos real)
-USERS_FILE = 'data/users.json'
-MOVIES_FILE = 'data/movies.json'
-RENTALS_FILE = 'data/rentals.json'
-
-# Crear carpeta de datos si no existe
-os.makedirs('data', exist_ok=True)
-
-# Inicializar archivos de datos si no existen
-if not os.path.exists(USERS_FILE):
-    with open(USERS_FILE, 'w') as f:
-        json.dump([], f)
-
-if not os.path.exists(MOVIES_FILE):
-    with open(MOVIES_FILE, 'w') as f:
-        json.dump([
-            {
-                "id": 1,
-                "title": "Dune",
-                "year": 2021,
-                "director": "Denis Villeneuve",
-                "genre": "Ciencia Ficción",
-                "poster": "/static/images/dune.jpg",
-                "description": "Paul Atreides, un joven brillante con un destino más allá de su comprensión, debe viajar al planeta más peligroso del universo para asegurar el futuro de su familia y su gente.",
-                "price": 4.99
-            },
-            {
-                "id": 2,
-                "title": "El Padrino",
-                "year": 1972,
-                "director": "Francis Ford Coppola",
-                "genre": "Drama",
-                "poster": "/static/images/godfather.jpg",
-                "description": "El envejecido patriarca de una dinastía del crimen organizado transfiere el control de su imperio clandestino a su reacio hijo.",
-                "price": 3.99
-            },
-            {
-                "id": 3,
-                "title": "Interestelar",
-                "year": 2014,
-                "director": "Christopher Nolan",
-                "genre": "Ciencia Ficción",
-                "poster": "/static/images/interstellar.jpg",
-                "description": "Un equipo de exploradores viaja a través de un agujero de gusano en el espacio en un intento de asegurar la supervivencia de la humanidad.",
-                "price": 4.50
-            }
-        ], f)
-
-if not os.path.exists(RENTALS_FILE):
-    with open(RENTALS_FILE, 'w') as f:
-        json.dump([], f)
-
-# Funciones de ayuda para manejar datos
-def get_users():
-    with open(USERS_FILE, 'r') as f:
-        return json.load(f)
-
-def save_users(users):
-    with open(USERS_FILE, 'w') as f:
-        json.dump(users, f)
-
-def get_movies():
-    with open(MOVIES_FILE, 'r') as f:
-        return json.load(f)
-
-def get_rentals():
-    with open(RENTALS_FILE, 'r') as f:
-        return json.load(f)
-
-def save_rentals(rentals):
-    with open(RENTALS_FILE, 'w') as f:
-        json.dump(rentals, f)
-
 # Rutas
+
+
+
 @app.route('/')
 def index():
     if 'user_id' in session:
@@ -233,6 +154,3 @@ def return_movie(rental_id):
     save_rentals(rentals)
     
     return jsonify({'success': True})
-
-if __name__ == '__main__':
-    app.run(debug=True)
