@@ -1,5 +1,8 @@
-# Rutas
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Blueprint
 
+app = Blueprint('app', __name__)
 
 
 @app.route('/')
