@@ -7,18 +7,16 @@ class User(db.Model):
     password = db.Column(db.String(200), nullable=False)
 
 class Movie(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    __tablename__ = 'movies'  # Definir explícitamente el nombre de la tabla
+
+    id = db.Column(db.Integer, primary_key=True)  # Clave primaria
     title = db.Column(db.String(100), nullable=False)
     genre = db.Column(db.String(50), nullable=False)
     year = db.Column(db.Integer, nullable=False)
     description = db.Column(db.Text, nullable=True)
-    stock = db.Column(db.Integer, default=2)  # Stock inicial
-    price = db.Column(db.Float, nullable=False, default=5.99)  # Precio de renta
-
-    def __repr__(self):
-        return f'<Movie {self.title}>'
-class Movie(db.Model):
-    __tablename__ = 'movies'  # Agregar esta línea
+    stock = db.Column(db.Integer, default=2)
+    price = db.Column(db.Float, nullable=False, default=5.99)
+    image_url = db.Column(db.String(200), nullable=True)
 
 
 class Rental(db.Model):
