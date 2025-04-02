@@ -20,13 +20,14 @@ class Movie(db.Model):
 
 
 class Rental(db.Model):
-    __tablename__ = 'rentals'
+    __tablename__ = 'rentals'  
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # 'users.id'
-    movie_id = db.Column(db.Integer, db.ForeignKey('movies.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete="CASCADE"), nullable=False)
+    movie_id = db.Column(db.Integer, db.ForeignKey('movies.id', ondelete="CASCADE"), nullable=False)  # Cambia 'movie' a 'movies'
     rent_date = db.Column(db.DateTime, nullable=False)
     return_date = db.Column(db.DateTime, nullable=True)
     price = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), nullable=False)
+
 
 

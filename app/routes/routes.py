@@ -69,13 +69,9 @@ def home():
 @routes.route('/movie/<int:movie_id>')
 def movie_details(movie_id):
     if 'user_id' not in session:
-        return redirect(url_for('routes.login'))  # Corregir redirección
+        return redirect(url_for('routes.login'))
     
-    movie = Movie.query.get(movie_id)  # Optimizar consulta
-    if not movie:
-        return redirect(url_for('routes.home'))  # Redirigir si no se encuentra la película
-    
-    # Verificar si la película ya está rentada por el usuario
+    movie = Movie.query.get_or_404(movie_id)  # Usar get_or_404 para manejar errores automáticamente
     is_rented = Rental.query.filter_by(user_id=session['user_id'], movie_id=movie_id, status='active').first() is not None
     
     return render_template('movie_details.html', movie=movie, is_rented=is_rented)
@@ -85,13 +81,15 @@ def rent_movie(movie_id):
     if 'user_id' not in session:
         return jsonify({'success': False, 'message': 'Debes iniciar sesión'})
     
-    movie = Movie.query.get(movie_id)
-    if not movie:
-        return jsonify({'success': False, 'message': 'Película no encontrada'})
+    movie = Movie.query.get_or_404(movie_id)  # Usar get_or_404 para manejar errores automáticamente
     
     existing_rental = Rental.query.filter_by(user_id=session['user_id'], movie_id=movie_id, status='active').first()
     if existing_rental:
         return jsonify({'success': False, 'message': 'Ya has rentado esta película'})
+    
+    # Validar que la película esté disponible antes de rentarla
+    if movie.stock <= 0:
+        return jsonify({'success': False, 'message': 'La película no está disponible'})
     
     new_rental = Rental(
         user_id=session['user_id'],
@@ -100,10 +98,11 @@ def rent_movie(movie_id):
         price=movie.price,
         status='active'
     )
+    movie.stock -= 1  # Reducir el stock de la película
     db.session.add(new_rental)
     db.session.commit()
     
-    return jsonify({'success': True})
+    return jsonify({'success': True, 'message': 'Película rentada exitosamente'})
 
 @routes.route('/my-rentals')
 def my_rentals():
@@ -132,12 +131,15 @@ def return_movie(rental_id):
     if 'user_id' not in session:
         return jsonify({'success': False, 'message': 'Debes iniciar sesión'})
     
-    rental = Rental.query.filter_by(id=rental_id, user_id=session['user_id']).first()
-    if not rental:
-        return jsonify({'success': False, 'message': 'Renta no encontrada'})
-    
+    rental = Rental.query.filter_by(id=rental_id, user_id=session['user_id']).first_or_404()  # Usar first_or_404
     rental.status = 'returned'
     rental.return_date = datetime.now()
+    
+    # Incrementar el stock de la película al devolverla
+    movie = Movie.query.get(rental.movie_id)
+    if movie:
+        movie.stock += 1
+    
     db.session.commit()
     
-    return jsonify({'success': True})
+    return jsonify({'success': True, 'message': 'Película devuelta exitosamente'})
