@@ -13,8 +13,8 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
 
+    # Importa modelos dentro del contexto de la app, pero sin `db.create_all()`
     with app.app_context():
-        from app.models.models import User, Movie, Rental  # Importar aquí
-        db.create_all()
+        from app.models.models import User, Movie, Rental  
 
     return app
