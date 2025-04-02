@@ -4,7 +4,7 @@
 <div class="movie-details">
     <div class="movie-details-content">
         <div class="movie-poster-large">
-            <img src="{{ movie.poster }}" alt="{{ movie.title }}">
+             <img src="{{ url_for('static', filename='images/' + movie.image_url) }}" alt="{{ movie.title }}">
         </div>
         
         <div class="movie-info-large">

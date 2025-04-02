@@ -64,6 +64,10 @@ def home():  # Mantener esta función como la principal para la página de inici
         return redirect(url_for('routes.login_page'))  # Cambiar 'routes.login' por 'routes.login_page'
     
     movies = Movie.query.all()
+    # Verificar que cada película tenga un valor para 'image_url'
+    for movie in movies:
+        if not movie.image_url:
+            movie.image_url = 'default.jpg'  # Asignar una imagen por defecto si falta
     return render_template('home.html', movies=movies)
 
 @routes.route('/movie/<int:movie_id>')
@@ -72,6 +76,8 @@ def movie_details(movie_id):
         return redirect(url_for('routes.login'))
     
     movie = Movie.query.get_or_404(movie_id)  # Usar get_or_404 para manejar errores automáticamente
+    if not movie.image_url:
+        movie.image_url = 'default.jpg'  # Asignar una imagen por defecto si falta
     is_rented = Rental.query.filter_by(user_id=session['user_id'], movie_id=movie_id, status='active').first() is not None
     
     return render_template('movie_details.html', movie=movie, is_rented=is_rented)
@@ -107,7 +113,7 @@ def rent_movie(movie_id):
 @routes.route('/my-rentals')
 def my_rentals():
     if 'user_id' not in session:
-        return redirect(url_for('routes.login'))  # Corregir redirección
+        return redirect(url_for('routes.login'))
     
     rentals = db.session.query(Rental, Movie).join(Movie, Rental.movie_id == Movie.id).filter(Rental.user_id == session['user_id']).all()
     user_rentals = [
@@ -115,7 +121,8 @@ def my_rentals():
             'id': rental.Rental.id,
             'movie': {
                 'title': rental.Movie.title,
-                'price': rental.Movie.price
+                'price': rental.Movie.price,
+                'image_url': rental.Movie.image_url or 'default.jpg'  # Asegurar que 'image_url' esté presente
             },
             'rent_date': rental.Rental.rent_date,
             'return_date': rental.Rental.return_date,

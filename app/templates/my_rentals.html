@@ -8,7 +8,7 @@
         {% for rental in rentals %}
         <div class="rental-item {% if rental.status == 'returned' %}returned{% endif %}">
             <div class="rental-poster">
-                <img src="{{ rental.movie.poster }}" alt="{{ rental.movie.title }}">
+                <img src="{{ url_for('static', filename='images/' + rental.movie.image_url) }}" alt="{{ rental.movie.title }}">
             </div>
             
             <div class="rental-info">

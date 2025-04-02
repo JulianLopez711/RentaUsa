@@ -19,7 +19,7 @@
     {% for movie in movies %}
     <div class="movie-card" data-genre="{{ movie.genre }}">
         <div class="movie-poster">
-            <img src="{{ movie.poster }}" alt="{{ movie.title }}">
+            <img src="{{ url_for('static', filename='images/' + movie.image_url) }}" alt="{{ movie.title }}">
         </div>
         <div class="movie-info">
             <h3>{{ movie.title }}</h3>

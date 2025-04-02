@@ -16,7 +16,7 @@ class Movie(db.Model):
     description = db.Column(db.Text, nullable=True)
     stock = db.Column(db.Integer, default=2)
     price = db.Column(db.Float, nullable=False, default=5.99)
-    image_url = db.Column(db.String(200), nullable=True)
+    image_url = db.Column(db.String(200), nullable=True, default='default.jpg')  # Asignar valor por defecto
 
 
 class Rental(db.Model):
@@ -28,6 +28,8 @@ class Rental(db.Model):
     return_date = db.Column(db.DateTime, nullable=True)
     price = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), nullable=False)
+
+    movie = db.relationship('Movie', backref='rentals')
 
 
 
