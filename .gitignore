@@ -1,0 +1,9 @@
+# Ignorar migraciones y caché de Python
+migrations/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+instance/
+.env
