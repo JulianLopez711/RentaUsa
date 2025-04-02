@@ -20,6 +20,7 @@ class Movie(db.Model):
 
 
 class Rental(db.Model):
+    __tablename__ = 'rentals'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # 'users.id'
     movie_id = db.Column(db.Integer, db.ForeignKey('movies.id'), nullable=False)
