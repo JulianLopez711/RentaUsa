@@ -72,12 +72,12 @@ def movie_details(movie_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    movies = get_movies()
+    movies = Movie.query.all()
     movie = next((m for m in movies if m['id'] == movie_id), None)
     
     if movie:
         # Verificar si la película ya está rentada por el usuario
-        rentals = get_rentals()
+        rentals = Rental.query.all()
         is_rented = any(r['user_id'] == session['user_id'] and r['movie_id'] == movie_id and r['status'] == 'active' for r in rentals)
         
         return render_template('movie_details.html', movie=movie, is_rented=is_rented)
