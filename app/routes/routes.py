@@ -8,7 +8,7 @@ from app.models.models import User, Movie, Rental  # Importar modelos
 routes = Blueprint('routes', __name__)
 
 @routes.route('/')
-def index():
+def home():
     if 'user_id' in session:
         return redirect(url_for('routes.home'))  # Corregir redirección
     return render_template('login.html')

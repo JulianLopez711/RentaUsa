@@ -33,7 +33,7 @@
         {% endfor %}
     {% else %}
         <p class="no-rentals">No tienes películas rentadas todavía.</p>
-        <a href="{{ url_for('home') }}" class="btn-primary">Explorar películas</a>
+        <a href="{{ url_for('routes.home') }}" class="btn-primary">Explorar películas</a>
     {% endif %}
 </div>
 {% endblock %}

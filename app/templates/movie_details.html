@@ -20,7 +20,7 @@
                 <p class="price">Precio de renta: ${{ movie.price }}</p>
                 
                 {% if is_rented %}
-                <button class="btn-secondary" disabled>Ya Rentada</button>
+                <button class="btn-secondary" disabled aria-disabled="true">Ya Rentada</button>
                 {% else %}
                 <button id="rent-button" class="btn-primary">Rentar Película</button>
                 <p id="rent-message" class="success-message"></p>
@@ -41,7 +41,12 @@
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 document.getElementById('rent-message').textContent = '¡Película rentada con éxito!';
