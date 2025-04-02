@@ -25,7 +25,7 @@
             <h3>{{ movie.title }}</h3>
             <p><span class="year">{{ movie.year }}</span> • <span class="genre">{{ movie.genre }}</span></p>
             <p class="price">${{ movie.price }}</p>
-            <a href="{{ url_for('movie_details', movie_id=movie.id) }}" class="btn-secondary">Ver Detalles</a>
+            <a href="{{ url_for('routes.movie_details', movie_id=movie.id) }}" class="btn-secondary">Ver Detalles</a>
         </div>
     </div>
     {% endfor %}
