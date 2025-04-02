@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Blueprint
 from datetime import datetime
 from app import db  # Importar la instancia de SQLAlchemy
-from app.models import User, Movie, Rental  # Importar modelos
+from app.models.models import User,Movie,Rental # Importar modelos
 
 routes = Blueprint('routes', __name__)
 
