@@ -95,7 +95,7 @@ def rent_movie(movie_id):
     
     # Validar que la película esté disponible antes de rentarla
     if movie.stock <= 0:
-        return jsonify({'success': False, 'message': 'La película no está disponible'})
+        return jsonify({'success': False, 'message': 'Esta película se ha agotado temporalmente'})
     
     new_rental = Rental(
         user_id=session['user_id'],
