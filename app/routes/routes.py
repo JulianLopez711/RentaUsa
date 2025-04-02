@@ -8,9 +8,9 @@ from app.models.models import User, Movie, Rental  # Importar modelos
 routes = Blueprint('routes', __name__)
 
 @routes.route('/')
-def home():
+def login_page():  # Renombrar esta función para evitar conflicto con la otra 'home'
     if 'user_id' in session:
-        return redirect(url_for('routes.home'))  # Corregir redirección
+        return redirect(url_for('routes.home'))  # Redirigir a la página principal
     return render_template('login.html')
 
 @routes.route('/login', methods=['GET', 'POST'])
@@ -56,12 +56,12 @@ def register():
 def logout():
     session.pop('user_id', None)
     session.pop('username', None)
-    return redirect(url_for('routes.login'))  # Corregir redirección
+    return redirect(url_for('routes.login_page'))  # Cambiar 'routes.login' por 'routes.login_page'
 
 @routes.route('/home')
-def home():
+def home():  # Mantener esta función como la principal para la página de inicio
     if 'user_id' not in session:
-        return redirect(url_for('routes.login'))  # Corregir redirección
+        return redirect(url_for('routes.login_page'))  # Cambiar 'routes.login' por 'routes.login_page'
     
     movies = Movie.query.all()
     return render_template('home.html', movies=movies)

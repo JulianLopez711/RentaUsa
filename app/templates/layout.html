@@ -10,7 +10,7 @@
 <body>
     <header>
         <div class="container">
-            <h1><a href="{{ url_for('routes.index') }}">CineUsa</a></h1>
+            <h1><a href="{{ url_for('routes.login_page') }}">CineUsa</a></h1>
             <nav>
                 {% if session.user_id %}
                 <a href="{{ url_for('routes.home') }}">Inicio</a>
