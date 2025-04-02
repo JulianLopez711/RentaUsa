@@ -3,15 +3,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Blueprint
 from datetime import datetime
 from app import db  # Importar la instancia de SQLAlchemy
-from app.models.models import User,Movie,Rental # Importar modelos
+from app.models.models import User, Movie, Rental  # Importar modelos
 
 routes = Blueprint('routes', __name__)
-
 
 @routes.route('/')
 def index():
     if 'user_id' in session:
-        return redirect(url_for('home'))
+        return redirect(url_for('routes.home'))  # Corregir redirección
     return render_template('login.html')
 
 @routes.route('/login', methods=['GET', 'POST'])
@@ -57,12 +56,12 @@ def register():
 def logout():
     session.pop('user_id', None)
     session.pop('username', None)
-    return redirect(url_for('login'))
+    return redirect(url_for('routes.login'))  # Corregir redirección
 
 @routes.route('/home')
 def home():
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        return redirect(url_for('routes.login'))  # Corregir redirección
     
     movies = Movie.query.all()
     return render_template('home.html', movies=movies)
@@ -70,19 +69,16 @@ def home():
 @routes.route('/movie/<int:movie_id>')
 def movie_details(movie_id):
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        return redirect(url_for('routes.login'))  # Corregir redirección
     
-    movies = Movie.query.all()
-    movie = next((m for m in movies if m['id'] == movie_id), None)
+    movie = Movie.query.get(movie_id)  # Optimizar consulta
+    if not movie:
+        return redirect(url_for('routes.home'))  # Redirigir si no se encuentra la película
     
-    if movie:
-        # Verificar si la película ya está rentada por el usuario
-        rentals = Rental.query.all()
-        is_rented = any(r['user_id'] == session['user_id'] and r['movie_id'] == movie_id and r['status'] == 'active' for r in rentals)
-        
-        return render_template('movie_details.html', movie=movie, is_rented=is_rented)
+    # Verificar si la película ya está rentada por el usuario
+    is_rented = Rental.query.filter_by(user_id=session['user_id'], movie_id=movie_id, status='active').first() is not None
     
-    return redirect(url_for('home'))
+    return render_template('movie_details.html', movie=movie, is_rented=is_rented)
 
 @routes.route('/rent/<int:movie_id>', methods=['POST'])
 def rent_movie(movie_id):
@@ -112,7 +108,7 @@ def rent_movie(movie_id):
 @routes.route('/my-rentals')
 def my_rentals():
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        return redirect(url_for('routes.login'))  # Corregir redirección
     
     rentals = db.session.query(Rental, Movie).join(Movie, Rental.movie_id == Movie.id).filter(Rental.user_id == session['user_id']).all()
     user_rentals = [

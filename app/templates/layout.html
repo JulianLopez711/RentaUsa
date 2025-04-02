@@ -10,15 +10,15 @@
 <body>
     <header>
         <div class="container">
-            <h1><a href="{{ url_for('home') }}">CineUsa</a></h1>
+            <h1><a href="{{ url_for('routes.index') }}">CineUsa</a></h1>
             <nav>
                 {% if session.user_id %}
-                <a href="{{ url_for('home') }}">Inicio</a>
-                <a href="{{ url_for('my_rentals') }}">Mis Rentas</a>
-                <a href="{{ url_for('logout') }}">Cerrar Sesión ({{ session.username }})</a>
+                <a href="{{ url_for('routes.home') }}">Inicio</a>
+                <a href="{{ url_for('routes.my_rentals') }}">Mis Rentas</a>
+                <a href="{{ url_for('routes.logout') }}">Cerrar Sesión ({{ session.username }})</a>
                 {% else %}
-                <a href="{{ url_for('login') }}">Iniciar Sesión</a>
-                <a href="{{ url_for('register') }}">Registrarse</a>
+                <a href="{{ url_for('routes.login') }}">Iniciar Sesión</a>
+                <a href="{{ url_for('routes.register') }}">Registrarse</a>
                 {% endif %}
             </nav>
         </div>
