@@ -13,7 +13,8 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
 
-    from app.routes.routes import routes  # ⬅ Mueve la importación aquí
-    app.register_blueprint(routes)
+    with app.app_context():
+        from app.models.models import User, Movie, Rental  # Importar aquí
+        db.create_all()
 
     return app
