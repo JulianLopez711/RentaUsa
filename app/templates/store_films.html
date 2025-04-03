@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Películas Disponibles en Sucursal {{ store.store_id }}</h2>
+<p>Dirección: {{ store.address.address }}</p>
+<p>Gerente: {{ store.manager.first_name }} {{ store.manager.last_name }}</p>
+
+<div class="movie-grid">
+    {% for film in films %}
+    <div class="movie-card">
+        <div class="movie-info">
+            <h3>{{ film.title }}</h3>
+            <p><span class="year">{{ film.release_year }}</span></p>
+            <p class="price">${{ film.rental_rate }}</p>
+            <a href="{{ url_for('routes.film_details', film_id=film.film_id) }}" class="btn-secondary">Ver Detalles</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

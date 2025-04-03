@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Seleccionar Sucursal</h2>
+
+<div class="store-filter">
+    <form method="get" action="{{ url_for('routes.stores') }}">
+        <label for="country">País:</label>
+        <select id="country" name="country_id" onchange="updateCities(this.value)">
+            <option value="">Seleccione un país</option>
+            {% for country in countries %}
+            <option value="{{ country.country_id }}" {% if selected_country == country.country_id %}selected{% endif %}>
+                {{ country.country }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label for="city">Ciudad:</label>
+        <select id="city" name="city_id" onchange="this.form.submit()">
+            <option value="">Seleccione una ciudad</option>
+            {% if selected_country %}
+            {% for city in selected_country.cities %}
+            <option value="{{ city.city_id }}" {% if selected_city == city.city_id %}selected{% endif %}>
+                {{ city.city }}
+            </option>
+            {% endfor %}
+            {% endif %}
+        </select>
+    </form>
+</div>
+
+<div class="store-list">
+    {% if stores %}
+        {% for store in stores %}
+        <div class="store-item">
+            <h3>Sucursal {{ store.store_id }}</h3>
+            <p>Gerente: {{ store.manager.first_name }} {{ store.manager.last_name }}</p>
+            <p>Dirección: {{ store.address.address }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>No hay sucursales disponibles para la selección actual.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function updateCities(countryId) {
+        const citySelect = document.getElementById('city');
+        citySelect.innerHTML = '<option value="">Cargando ciudades...</option>';
+
+        fetch(`/get-cities/${countryId}`)
+            .then(response => response.json())
+            .then(data => {
+                citySelect.innerHTML = '<option value="">Seleccione una ciudad</option>';
+                data.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.city_id;
+                    option.textContent = city.city_name;
+                    citySelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error al cargar las ciudades:', error);
+            });
+    }
+</script>
+{% endblock %}

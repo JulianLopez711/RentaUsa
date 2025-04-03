@@ -11,15 +11,17 @@
     <header>
         <div class="container">
             <h1><a href="{{ url_for('routes.login_page') }}">CineUsa</a></h1>
-            <nav>
-                {% if session.user_id %}
-                <a href="{{ url_for('routes.home') }}">Inicio</a>
-                <a href="{{ url_for('routes.my_rentals') }}">Mis Rentas</a>
-                <a href="{{ url_for('routes.logout') }}">Cerrar Sesión ({{ session.username }})</a>
-                {% else %}
-                <a href="{{ url_for('routes.login') }}">Iniciar Sesión</a>
-                <a href="{{ url_for('routes.register') }}">Registrarse</a>
-                {% endif %}
+            <nav class="navbar">
+                <div class="navbar-content">
+                    {% if session.get('email') %}
+                    <span>Conectado como: {{ session['email'] }}</span>
+                    <a href="{{ url_for('routes.my_rentals') }}" class="btn-secondary">Mis Rentas</a>
+                    <a href="{{ url_for('routes.stores') }}" class="btn-secondary">Sucursales</a>
+                    <a href="{{ url_for('routes.logout') }}" class="btn-secondary">Cerrar Sesión</a>
+                    {% else %}
+                    <a href="{{ url_for('routes.login_page') }}" class="btn-primary">Iniciar Sesión</a>
+                    {% endif %}
+                </div>
             </nav>
         </div>
     </header>

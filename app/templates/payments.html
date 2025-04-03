@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Historial de Pagos</h2>
+
+<div class="payments-list">
+    {% if payments %}
+        {% for payment in payments %}
+        <div class="payment-item">
+            <p>Fecha: {{ payment.payment_date }}</p>
+            <p>Monto: ${{ payment.amount }}</p>
+            <p>Película: {{ payment.rental.inventory.film.title }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>No tienes pagos registrados.</p>
+    {% endif %}
+</div>
+{% endblock %}

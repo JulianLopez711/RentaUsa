@@ -4,58 +4,39 @@
 <h2>Películas Disponibles</h2>
 
 <div class="movie-filter">
-    <input type="text" id="search-input" placeholder="Buscar película...">
-    <select id="genre-filter">
-        <option value="">Todos los géneros</option>
-        <option value="Acción">Acción</option>
-        <option value="Comedia">Comedia</option>
-        <option value="Drama">Drama</option>
-        <option value="Ciencia Ficción">Ciencia Ficción</option>
-        <option value="Terror">Terror</option>
-    </select>
+    <form method="get" action="{{ url_for('routes.home') }}">
+        <label for="category">Género:</label>
+        <select name="category_id" id="category" onchange="this.form.submit()">
+            <option value="">Todos los géneros</option>
+            {% for category in categories %}
+            <option value="{{ category.category_id }}" {% if selected_category == category.category_id %}selected{% endif %}>
+                {{ category.name }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label for="store">Ubicación:</label>
+        <select name="store_id" id="store" onchange="this.form.submit()">
+            <option value="">Todas las ubicaciones</option>
+            {% for store in stores %}
+            <option value="{{ store.store_id }}" {% if selected_store == store.store_id %}selected{% endif %}>
+                {{ store.address.address }}
+            </option>
+            {% endfor %}
+        </select>
+    </form>
 </div>
 
 <div class="movie-grid">
-    {% for movie in movies %}
-    <div class="movie-card" data-genre="{{ movie.genre }}">
-        <div class="movie-poster">
-            <img src="{{ url_for('static', filename='images/' + movie.image_url) }}" alt="{{ movie.title }}">
-        </div>
+    {% for movie in films %}
+    <div class="movie-card">
         <div class="movie-info">
             <h3>{{ movie.title }}</h3>
-            <p><span class="year">{{ movie.year }}</span> • <span class="genre">{{ movie.genre }}</span></p>
-            <p class="price">${{ movie.price }}</p>
-            <a href="{{ url_for('routes.movie_details', movie_id=movie.id) }}" class="btn-secondary">Ver Detalles</a>
+            <p><span class="year">{{ movie.release_year }}</span></p>
+            <p class="price">${{ movie.rental_rate }}</p>
+            <a href="{{ url_for('routes.film_details', film_id=movie.film_id) }}" class="btn-secondary">Ver Detalles</a>
         </div>
     </div>
     {% endfor %}
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    // Filtro de búsqueda
-    document.getElementById('search-input').addEventListener('input', filterMovies);
-    document.getElementById('genre-filter').addEventListener('change', filterMovies);
-    
-    function filterMovies() {
-        const searchTerm = document.getElementById('search-input').value.toLowerCase();
-        const genreFilter = document.getElementById('genre-filter').value;
-        const movieCards = document.querySelectorAll('.movie-card');
-        
-        movieCards.forEach(card => {
-            const title = card.querySelector('h3').textContent.toLowerCase();
-            const genre = card.dataset.genre;
-            
-            const matchesSearch = title.includes(searchTerm);
-            const matchesGenre = !genreFilter || genre === genreFilter;
-            
-            if (matchesSearch && matchesGenre) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-            }
-        });
-    }
-</script>
 {% endblock %}

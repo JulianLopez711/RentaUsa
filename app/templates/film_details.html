@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="movie-details">
+    <div class="movie-details-content">
+        <div class="movie-info-large">
+            <h2>{{ movie.title }} <span class="year">({{ movie.release_year }})</span></h2>
+            <div class="description">
+                <h3>Sinopsis</h3>
+                <p>{{ movie.description }}</p>
+            </div>
+            
+            <div class="language-section">
+                <h3>Idioma</h3>
+                <p>{{ movie.language.name }}</p>
+            </div>
+            
+            <div class="actors-section">
+                <h3>Actores</h3>
+                <ul>
+                    {% for actor in movie.actors %}
+                    <li>{{ actor.first_name }} {{ actor.last_name }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="availability-section">
+                <h3>Disponibilidad</h3>
+                {% if is_available %}
+                <p class="available">Disponible</p>
+                {% else %}
+                <p class="not-available">No Disponible</p>
+                {% endif %}
+            </div>
+            
+            <div class="rental-section">
+                <p class="price">Precio de renta: ${{ movie.rental_rate }}</p>
+                {% if is_rented or not is_available %}
+                <button class="btn-secondary" disabled>Rentado</button>
+                {% else %}
+                <form id="rent-form" action="{{ url_for('routes.rent_film', film_id=movie.film_id) }}" method="POST">
+                    <button id="rent-button" type="submit" class="btn-primary">Rentar Película</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('rent-form')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const rentButton = document.getElementById('rent-button');
+                rentButton.textContent = 'Rentado';
+                rentButton.classList.remove('btn-primary');
+                rentButton.classList.add('btn-secondary');
+                rentButton.disabled = true;
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al procesar la solicitud.');
+        });
+    });
+</script>
+{% endblock %}

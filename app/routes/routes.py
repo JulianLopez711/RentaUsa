@@ -1,51 +1,58 @@
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for
-from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Blueprint
 from datetime import datetime
 from app import db  # Importar la instancia de SQLAlchemy
-from app.models.models import User, Movie, Rental  # Importar modelos
+from app.models.models import Customer, Film, Rental, Category, Inventory, Store, Country, City, Address, Payment  # Agregar Payment
+from sqlalchemy.exc import IntegrityError
 
 routes = Blueprint('routes', __name__)
 
 @routes.route('/')
-def login_page():  # Renombrar esta función para evitar conflicto con la otra 'home'
-    if 'user_id' in session:
-        return redirect(url_for('routes.home'))  # Redirigir a la página principal
+def login_page():
+    if 'customer_id' in session:  # Cambiar 'user_id' por 'customer_id'
+        return redirect(url_for('routes.home'))
     return render_template('login.html')
 
-@routes.route('/login', methods=['GET', 'POST'])
+@routes.route('/login', methods=['POST'])
 def login():
-    if request.method == 'POST':
-        data = request.get_json()
-        if not data or not data.get('username') or not data.get('password'):  # Validar datos
-            return jsonify({'success': False, 'message': 'Datos incompletos'})
-        username = data.get('username')
-        password = data.get('password')
-        
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
-            session['user_id'] = user.id
-            session['username'] = user.username
-            return jsonify({'success': True})
-        
-        return jsonify({'success': False, 'message': 'Usuario o contraseña incorrectos'})
-    
-    return render_template('login.html')
+    data = request.get_json()
+    if not data or not data.get('email'):  # Validar que el correo electrónico esté presente
+        return jsonify({'success': False, 'message': 'Correo electrónico requerido'})
+
+    email = data.get('email')
+    customer = Customer.query.filter_by(email=email).first()
+
+    if customer:
+        session['customer_id'] = customer.customer_id
+        session['email'] = customer.email
+
+        # Cargar historial de renta en la sesión
+        rentals = Rental.query.filter_by(customer_id=customer.customer_id).all()
+        session['rental_history'] = [
+            {
+                'film_title': rental.inventory.film.title,
+                'rental_date': rental.rental_date,
+                'return_date': rental.return_date
+            }
+            for rental in rentals
+        ]
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'message': 'Correo electrónico no encontrado'})
 
 @routes.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         data = request.get_json()
-        if not data or not data.get('username') or not data.get('password'):  # Validar datos
-            return jsonify({'success': False, 'message': 'Datos incompletos'})
-        username = data.get('username')
-        password = data.get('password')
+        if not data or not data.get('email'):  # Solo validar el correo electrónico
+            return jsonify({'success': False, 'message': 'Correo electrónico requerido'})
+        email = data.get('email')
         
-        if User.query.filter_by(username=username).first():
-            return jsonify({'success': False, 'message': 'El nombre de usuario ya está en uso'})
+        if Customer.query.filter_by(email=email).first():
+            return jsonify({'success': False, 'message': 'El correo electrónico ya está registrado'})
         
-        new_user = User(username=username, password=generate_password_hash(password))
-        db.session.add(new_user)
+        new_customer = Customer(email=email, create_date=datetime.now(), active=True)
+        db.session.add(new_customer)
         db.session.commit()
         
         return jsonify({'success': True})
@@ -54,99 +61,174 @@ def register():
 
 @routes.route('/logout')
 def logout():
-    session.pop('user_id', None)
-    session.pop('username', None)
-    return redirect(url_for('routes.login_page'))  # Cambiar 'routes.login' por 'routes.login_page'
+    session.pop('customer_id', None)  # Cambiar 'user_id' por 'customer_id'
+    session.pop('email', None)  # Cambiar 'username' por 'email'
+    return redirect(url_for('routes.login_page'))
 
 @routes.route('/home')
-def home():  # Mantener esta función como la principal para la página de inicio
-    if 'user_id' not in session:
-        return redirect(url_for('routes.login_page'))  # Cambiar 'routes.login' por 'routes.login_page'
+def home():
+    if 'customer_id' not in session:  # Verificar si el usuario está autenticado
+        return redirect(url_for('routes.login_page'))
     
-    movies = Movie.query.all()
-    # Verificar que cada película tenga un valor para 'image_url'
-    for movie in movies:
-        if not movie.image_url:
-            movie.image_url = 'default.jpg'  # Asignar una imagen por defecto si falta
-    return render_template('home.html', movies=movies)
+    category_id = request.args.get('category_id', type=int)
+    store_id = request.args.get('store_id', type=int)
+    categories = Category.query.all()
 
-@routes.route('/movie/<int:movie_id>')
-def movie_details(movie_id):
-    if 'user_id' not in session:
-        return redirect(url_for('routes.login'))
+    # Filtrar solo las tiendas que tienen películas disponibles
+    stores = Store.query.join(Inventory).filter(Inventory.film_id.isnot(None)).distinct().all()
     
-    movie = Movie.query.get_or_404(movie_id)  # Usar get_or_404 para manejar errores automáticamente
-    if not movie.image_url:
-        movie.image_url = 'default.jpg'  # Asignar una imagen por defecto si falta
-    is_rented = Rental.query.filter_by(user_id=session['user_id'], movie_id=movie_id, status='active').first() is not None
+    query = Film.query.join(Inventory).join(Store)
     
-    return render_template('movie_details.html', movie=movie, is_rented=is_rented)
+    if category_id:
+        query = query.join(Film.categories).filter(Category.category_id == category_id)
+    if store_id:
+        query = query.filter(Inventory.store_id == store_id)
+    
+    films = query.all()
+    
+    return render_template('home.html', films=films, categories=categories, stores=stores, selected_category=category_id, selected_store=store_id)
 
-@routes.route('/rent/<int:movie_id>', methods=['POST'])
-def rent_movie(movie_id):
-    if 'user_id' not in session:
+@routes.route('/film/<int:film_id>')
+def film_details(film_id):
+    if 'customer_id' not in session:  # Verificar si el usuario está autenticado
+        return redirect(url_for('routes.login_page'))
+    
+    film = Film.query.get_or_404(film_id)
+    
+    # Verificar si hay inventario disponible para la película
+    is_available = Inventory.query.filter_by(film_id=film_id).filter(
+        ~Inventory.rentals.any(Rental.return_date == None)  # Inventario no rentado
+    ).first() is not None
+
+    return render_template('film_details.html', movie=film, is_available=is_available)
+
+@routes.route('/rent/<int:film_id>', methods=['POST'])
+def rent_film(film_id):
+    if 'customer_id' not in session:  # Verificar si el usuario está autenticado
         return jsonify({'success': False, 'message': 'Debes iniciar sesión'})
     
-    movie = Movie.query.get_or_404(movie_id)  # Usar get_or_404 para manejar errores automáticamente
+    film = Film.query.get_or_404(film_id)
     
-    existing_rental = Rental.query.filter_by(user_id=session['user_id'], movie_id=movie_id, status='active').first()
-    if existing_rental:
-        return jsonify({'success': False, 'message': 'Ya has rentado esta película'})
-    
-    # Validar que la película esté disponible antes de rentarla
-    if movie.stock <= 0:
-        return jsonify({'success': False, 'message': 'Esta película se ha agotado temporalmente'})
-    
+    # Verificar si hay inventario disponible para la película
+    inventory = Inventory.query.filter_by(film_id=film_id).filter(
+        ~Inventory.rentals.any(Rental.return_date == None)  # Inventario no rentado
+    ).first()
+    if not inventory:
+        return jsonify({'success': False, 'message': 'Película no disponible en inventario'})
+
+    # Obtener el staff_id del gerente de la sucursal
+    store = Store.query.get(inventory.store_id)
+    staff_id = store.manager_staff_id if store else None
+
+    if not staff_id:
+        return jsonify({'success': False, 'message': 'No se pudo determinar el empleado responsable del alquiler'})
+
+    # Crear una nueva renta
     new_rental = Rental(
-        user_id=session['user_id'],
-        movie_id=movie_id,
-        rent_date=datetime.now(),
-        price=movie.price,
-        status='active'
+        customer_id=session['customer_id'],
+        inventory_id=inventory.inventory_id,
+        rental_date=datetime.now(),
+        staff_id=staff_id,
+        last_update=datetime.now()
     )
-    movie.stock -= 1  # Reducir el stock de la película
     db.session.add(new_rental)
-    db.session.commit()
-    
+    db.session.flush()  # Obtener el rental_id antes de confirmar la transacción
+
+    # Registrar el pago
+    new_payment = Payment(
+        customer_id=session['customer_id'],
+        staff_id=staff_id,
+        rental_id=new_rental.rental_id,
+        amount=film.rental_rate,
+        payment_date=datetime.now()
+    )
+    db.session.add(new_payment)
+
+    try:
+        db.session.commit()
+    except IntegrityError as e:
+        db.session.rollback()
+        if "no partition of relation" in str(e):
+            return jsonify({'success': False, 'message': 'No existe una partición para la fecha de pago. Contacta al administrador.'})
+        return jsonify({'success': False, 'message': 'Error al procesar la renta.'})
+
     return jsonify({'success': True, 'message': 'Película rentada exitosamente'})
 
 @routes.route('/my-rentals')
 def my_rentals():
-    if 'user_id' not in session:
-        return redirect(url_for('routes.login'))
+    if 'customer_id' not in session:  # Verificar si el usuario está autenticado
+        return redirect(url_for('routes.login_page'))
     
-    rentals = db.session.query(Rental, Movie).join(Movie, Rental.movie_id == Movie.id).filter(Rental.user_id == session['user_id']).all()
-    user_rentals = [
+    # Filtrar solo las rentas activas (sin fecha de devolución)
+    rentals = db.session.query(Rental).join(Inventory).join(Film).filter(
+        Rental.customer_id == session['customer_id'],
+        Rental.return_date == None  # Solo rentas activas
+    ).all()
+    
+    customer_rentals = [
         {
-            'id': rental.Rental.id,
-            'movie': {
-                'title': rental.Movie.title,
-                'price': rental.Movie.price,
-                'image_url': rental.Movie.image_url or 'default.jpg'  # Asegurar que 'image_url' esté presente
+            'id': rental.rental_id,
+            'film': {
+                'title': rental.inventory.film.title,
+                'price': rental.inventory.film.rental_rate
             },
-            'rent_date': rental.Rental.rent_date,
-            'return_date': rental.Rental.return_date,
-            'status': rental.Rental.status
+            'rental_date': rental.rental_date,
+            'return_date': rental.return_date,
+            'status': 'active'
         }
         for rental in rentals
     ]
     
-    return render_template('my_rentals.html', rentals=user_rentals)
+    return render_template('my_rentals.html', rentals=customer_rentals)
 
 @routes.route('/return/<int:rental_id>', methods=['POST'])
-def return_movie(rental_id):
-    if 'user_id' not in session:
+def return_film(rental_id):
+    if 'customer_id' not in session:  # Verificar si el usuario está autenticado
         return jsonify({'success': False, 'message': 'Debes iniciar sesión'})
-    
-    rental = Rental.query.filter_by(id=rental_id, user_id=session['user_id']).first_or_404()  # Usar first_or_404
-    rental.status = 'returned'
+
+    # Buscar el alquiler correspondiente
+    rental = Rental.query.filter_by(rental_id=rental_id, customer_id=session['customer_id']).first()
+    if not rental:
+        return jsonify({'success': False, 'message': 'Alquiler no encontrado'})
+
+    # Actualizar el estado del alquiler
     rental.return_date = datetime.now()
+    rental.last_update = datetime.now()
+
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Película devuelta exitosamente'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Error al devolver la película', 'error': str(e)})
+
+@routes.route('/get-cities/<int:country_id>')
+def get_cities(country_id):
+    cities = City.query.filter_by(country_id=country_id).all()
+    city_data = [{'city_id': city.city_id, 'city_name': city.city} for city in cities]
+    return jsonify(city_data)
+
+@routes.route('/stores', methods=['GET', 'POST'])
+def stores():
+    if 'customer_id' not in session:  # Verificar si el usuario está autenticado
+        return redirect(url_for('routes.login_page'))
     
-    # Incrementar el stock de la película al devolverla
-    movie = Movie.query.get(rental.movie_id)
-    if movie:
-        movie.stock += 1
+    countries = Country.query.all()
+    selected_country = request.args.get('country_id', type=int)
+    selected_city = request.args.get('city_id', type=int)
+    stores = []
+    if selected_city:
+        stores = Store.query.join(Address).filter(Address.city_id == selected_city).all()
+
+    return render_template('stores.html', countries=countries, stores=stores, selected_country=selected_country, selected_city=selected_city)
+
+@routes.route('/store/<int:store_id>/films')
+def store_films(store_id):
+    if 'customer_id' not in session:  # Verificar si el usuario está autenticado
+        return redirect(url_for('routes.login_page'))
     
-    db.session.commit()
-    
-    return jsonify({'success': True, 'message': 'Película devuelta exitosamente'})
+    store = Store.query.get_or_404(store_id)
+    inventories = Inventory.query.filter_by(store_id=store_id).all()
+    films = [inventory.film for inventory in inventories]
+
+    return render_template('store_films.html', store=store, films=films)

@@ -14,7 +14,7 @@ def create_app():
     migrate.init_app(app, db)
 
     with app.app_context():
-        from app.models.models import User, Movie, Rental
+        from app.models.models import Customer, Film, Rental, Store  # Agregar Store
         from app.routes.routes import routes  # Importar el Blueprint de rutas
         app.register_blueprint(routes)  # Registrar el Blueprint
 
