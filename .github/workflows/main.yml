@@ -23,14 +23,11 @@ jobs:
       - name: Deploy to EC2
         run: |
           set -e  # Detener el script si ocurre un error
-          ssh ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -tt ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
           cd /home/ubuntu/app
           git pull origin main
           source venv/bin/activate
           pip install -r requirements.txt
           # Reiniciar la aplicación Flask (asumiendo que está ejecutándose como un servicio)
-          # Si tienes un servicio systemd configurado
           sudo systemctl restart flask-app
-          # O si estás usando otro método para mantener la app ejecutándose (como supervisor)
-          # sudo supervisorctl restart flask-app
           EOF
