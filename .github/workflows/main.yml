@@ -16,7 +16,6 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          # Usar printf para evitar caracteres no deseados
           printf "%s" "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
@@ -25,10 +24,11 @@ jobs:
         run: |
           set -e  # Detener el script si ocurre un error
           ssh -tt ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-          cd /home/ubuntu/app
+          APP_DIR=/home/ubuntu/app
+          cd $APP_DIR
           git pull origin main
           source venv/bin/activate
+          cd RentaUsa
           pip install -r requirements.txt
-          # Reiniciar la aplicación Flask (asumiendo que está ejecutándose como un servicio)
           sudo systemctl restart flask-app
           EOF
