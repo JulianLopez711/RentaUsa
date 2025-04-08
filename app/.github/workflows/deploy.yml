@@ -16,8 +16,10 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
+          # Usa el secreto SSH_PRIVATE_KEY para configurar la clave privada
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          # Agrega el host EC2 al archivo known_hosts usando el secreto EC2_HOST
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2
