@@ -19,11 +19,10 @@ jobs:
           printf "%s" "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-      
 
       - name: Deploy to EC2
         run: |
-          set -e  # Detener el script si ocurre un error
+          set -e
           ssh -tt ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
           APP_DIR=/home/ubuntu/app
           cd $APP_DIR
