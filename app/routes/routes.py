@@ -150,8 +150,8 @@ def rent_film(film_id):
         db.session.rollback()
         if "no partition of relation" in str(e):
             return jsonify({'success': False, 'message': 'No existe una partición para la fecha de pago. Contacta al administrador.'})
-        return jsonify({'success': False, 'message': 'Error al procesar la renta.'})
-
+        raise
+    
     return jsonify({'success': True, 'message': 'Película rentada exitosamente'})
 
 @routes.route('/my-rentals')
