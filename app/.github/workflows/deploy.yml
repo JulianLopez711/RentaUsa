@@ -22,6 +22,7 @@ jobs:
 
       - name: Deploy to EC2
         run: |
+          set -e  # Detener el script si ocurre un error
           ssh ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
           cd /home/ubuntu/app
           git pull origin main
