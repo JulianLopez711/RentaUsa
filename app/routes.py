@@ -1,6 +1,5 @@
 from flask import jsonify, request
-from app.models import db, Film  # Asegúrate de importar el modelo Film
-# ...existing code...
+from app.models import Film  # Ajustar la importación según la nueva estructura
 
 @app.route('/rent_film/<int:film_id>', methods=['POST'])
 def rent_film(film_id):
