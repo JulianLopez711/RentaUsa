@@ -1,7 +1,9 @@
-from flask import jsonify, request
+from flask import Blueprint, jsonify, request
 from app.models import Film  # Ajustar la importación según la nueva estructura
 
-@app.route('/rent_film/<int:film_id>', methods=['POST'])
+routes = Blueprint('routes', __name__)  # Crear el Blueprint
+
+@routes.route('/rent_film/<int:film_id>', methods=['POST'])
 def rent_film(film_id):
     # Obtener la película por ID
     film = Film.query.get(film_id)

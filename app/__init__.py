@@ -16,7 +16,7 @@ def create_app():
     with app.app_context():
         from app.models import Film  # Ajustar la importación según la nueva estructura
         from app.models.models import Customer, Rental, Store
-        from app.routes.routes import routes  # Importar el Blueprint de rutas
+        from app.routes import routes  # Importar el Blueprint de rutas
         app.register_blueprint(routes)  # Registrar el Blueprint
 
     return app
